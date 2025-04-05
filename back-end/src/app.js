@@ -5,7 +5,15 @@ import express, { json, urlencoded } from 'express'
 import cookieParser from 'cookie-parser'
 import logger from 'morgan'
 
+    
 const app = express()
+
+import cors from 'cors'
+// configurando o CORS para que o backend aeite requisições vindas das origens indicadas pela variável de ambiente ALLOWED_ORIGINS
+app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS.split(',')
+    }))
+
 
 app.use(logger('dev'))
 app.use(json())
