@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exposição de valores do localStorage</title>
+</head>
+<body>
+  <h1>Exposição de valores do localStorage</h1>
+  <script>
+    for(let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      const value = localStorage.getItem(key)
+      const p = document.createElement('p')
+      p.textContent = `${key} => ${value}`
+      console.log(`${key} => ${value}`)
+      document.body.appendChild(p)
+    }
+  </script>
+</body>
+</html>
