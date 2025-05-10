@@ -65,6 +65,11 @@ export default function MainMenu() {
       // Item do menu só aparece se o usuário logado for administrador
       authLevel: 2
     },
+        {
+      children: 'Ataque de Força Bruta',
+      to: '/brute-force',
+      authLevel: 2
+    }
   ]
 
   return (
@@ -115,4 +120,3 @@ export default function MainMenu() {
     </div>
   );
 }
-
