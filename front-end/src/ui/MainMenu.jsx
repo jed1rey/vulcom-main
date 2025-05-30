@@ -6,6 +6,8 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { Link } from 'react-router-dom'
 import AuthUserContext from '../contexts/AuthUserContext'
 
+import { routes, NO_USER, AUTHENTICATED_USER, ADMIN_USER } from '../routes/routes'
+
 export default function MainMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -18,60 +20,21 @@ export default function MainMenu() {
 
   const { authUser } = React.useContext(AuthUserContext)
 
+  // Determina o nível do usuário atualmente autenticado
+  let currentUserLevel
+  if(!authUser) currentUserLevel = NO_USER
+  else if(authUser?.is_admin) currentUserLevel = ADMIN_USER
+  else currentUserLevel = AUTHENTICATED_USER
+
   /*
-    authLevel para o menu principal:
-    * Nível 0: o menu é sempre exibido, independentemente de haver
-               usuário autenticado
-    * Nível 1: o menu será exibido apenas se houver usuário autenticado
-    * Nível 2: o menu será exibido apenas se o usuário autenticado for
-    *          administrador       
+    Filtra as rotas que se tornarão itens de menu, excluindo:
+    * rotas com omitFromMainMenu === true
+    * rotas com userLevel > currentUserLevel
   */
-
-  const menuItems = [
-    {
-      children: 'Página inicial',
-      to: '/',
-      divider: true,
-      authLevel: 0
-    },
-    {
-      children: 'Listagem de veículos',
-      to: '/cars',
-      divider: false,
-      authLevel: 1
-    },
-    {
-      children: 'Cadastro de veículos',
-      to: '/cars/new',
-      divider: true,
-      authLevel: 1
-    },
-    {
-      children: 'Listagem de clientes',
-      to: '/customers',
-      divider: false,
-      authLevel: 1
-    },
-    {
-      children: 'Cadastro de clientes',
-      to: '/customers/new',
-      divider: true,
-      authLevel: 1
-    },
-    {
-      children: 'Cadastro de usuários',
-      to: '/users',
-      divider: true,
-      // Item do menu só aparece se o usuário logado for administrador
-      authLevel: 2
-    },
-        {
-      children: 'Ataque de Força Bruta',
-      to: '/brute-force',
-      authLevel: 2
-    }
-  ]
-
+  const menuRoutes = routes.filter(route => 
+    !(route?.omitFromMainMenu) && route.userLevel <= currentUserLevel
+  )
+  
   return (
     <div>
       <IconButton 
@@ -97,26 +60,20 @@ export default function MainMenu() {
         }}
       >
         {
-          menuItems.map(item => {
-            if(
-              (item.authLevel === 0) ||
-              (item.authLevel === 1 && authUser) ||
-              (item.authLevel === 2 && authUser?.is_admin)
-            ) {
-              return <MenuItem 
-                key={item.to} 
-                onClick={handleClose} 
-                component={Link}
-                to={item.to}
-                divider={item.divider}
-              >
-                {item.children}
-              </MenuItem>
-            }
-            else return []
-          })
+          menuRoutes.map(route => (
+            <MenuItem
+              key={route.path}
+              onClick={handleClose}
+              component={Link}
+              to={route.path}
+              divider={route?.divider}
+            >
+              { route.description }
+            </MenuItem>
+          ))
         }
       </Menu>
     </div>
   );
 }
+

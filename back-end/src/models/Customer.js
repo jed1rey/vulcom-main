@@ -11,7 +11,7 @@ const maxBirthDate = new Date()   // Hoje
 maxBirthDate.setFullYear(maxBirthDate.getFullYear() - 18)
 
 // O cliente pode ter, no máximo, 120 anos de idade
-const minBirthDate = newDate()
+const minBirthDate = new Date()
 minBirthDate.setFullYear(minBirthDate.getFullYear() - 120)
 
 // Unidades da Federação
@@ -64,6 +64,11 @@ const Customer = z.object({
     .trim()
     .max(20, { message: 'Complemento pode ter, no máximo, 20 caracteres.' })
     .nullish(),
+
+  district: z.string()
+    .trim()
+    .min(1, { message: 'Bairro deve ter, no mínimo, 1 caractere.' })
+    .max(25, { message: 'Bairro pode ter, no máximo, 25 caracteres.' }),
 
   municipality: z.string()
     .trim()
