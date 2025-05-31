@@ -1,13 +1,12 @@
-import { z } from "zod";
+import { z } from "zod"
 
+const allowedColors = ["vermelho", "azul", "preto", "branco", "cinza"]
 
-const allowedColors = ["vermelho", "azul", "preto", "branco", "cinza"]; 
+const currentYear = new Date().getFullYear()
+const today = new Date()
+const lojaAbertura = new Date("2020-01-01")
 
-const currentYear = new Date().getFullYear();
-const today = new Date();
-const lojaAbertura = new Date("2020-01-01");
-
-export const carSchema = z.object({
+const Car = z.object({
   brand: z.string()
     .min(1, { message: "A marca deve conter pelo menos 1 caractere" })
     .max(25, { message: "A marca deve conter no máximo 25 caracteres" }),
@@ -45,4 +44,6 @@ export const carSchema = z.object({
     .min(1000, { message: "Preço mínimo é R$ 1.000,00" })
     .max(5000000, { message: "Preço máximo é R$ 5.000.000,00" })
     .optional(),
-});
+})
+
+export default Car
