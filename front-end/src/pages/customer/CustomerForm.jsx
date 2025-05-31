@@ -14,6 +14,8 @@ import useNotification from '../../ui/useNotification'
 import useWaiting from '../../ui/useWaiting'
 import { useNavigate, useParams } from 'react-router-dom'
 import myfetch from '../../lib/myfetch'
+import Customer from '../../models/Customer'
+import { ZodError } from 'zod'
 
 export default function CustomerForm() {
   
@@ -99,6 +101,10 @@ export default function CustomerForm() {
     // Exibir a tela de espera
     showWaiting(true)
     try {
+
+      // Invoca a validação do Zod
+      Customer.parse(customer)
+
       // Envia os dados para o back-end para criar um novo cliente
       // no banco de dados
       // Se houver parâmetro na rota, significa que estamos editando.
@@ -117,6 +123,16 @@ export default function CustomerForm() {
     }
     catch(error) {
       console.error(error)
+
+      // Em caso de erro do Zod, preenchemos a variável de estado
+      // inputErrors com os erros para depois exibir abaixo de cada
+      // campo de entrada
+      if(error instanceof ZodError) {
+        const errorMesseges = {}
+        for(let i of error.issues) error.message[i.path[0]] = i.message
+        setState({ ...state, inputErrors: errorMesseges })
+        notify('Há campos com valores inválidos. Verifique.', 'error')       
+      }
       notify(error.message, 'error')
     }
     finally {
@@ -184,7 +200,7 @@ export default function CustomerForm() {
             autoFocus
             value={customer.name}
             onChange={handleFieldChange} 
-            error={inputErrors?.name}
+            error={Boolean(inputErrors?.name)}
             helperText={inputErrors?.name} 
           />
 
@@ -201,7 +217,7 @@ export default function CustomerForm() {
                   variant="filled"
                   required
                   fullWidth
-                  error={inputErrors?.ident_document}
+                  error={Boolean(inputErrors?.ident_document)}
                   helperText={inputErrors?.ident_document}                    
                 />
             }
@@ -234,7 +250,7 @@ export default function CustomerForm() {
             placeholder="Ex.: Rua Principal"
             value={customer.street_name}
             onChange={handleFieldChange}
-            error={inputErrors?.street_name}
+            error={Boolean(inputErrors?.street_name)}
             helperText={inputErrors?.street_name}  
           />
 
@@ -246,7 +262,7 @@ export default function CustomerForm() {
             fullWidth
             value={customer.house_number}
             onChange={handleFieldChange}
-            error={inputErrors?.house_number}
+            error={Boolean(inputErrors?.house_number)}
             helperText={inputErrors?.house_number}  
           />
 
@@ -258,7 +274,7 @@ export default function CustomerForm() {
             placeholder="Apto., bloco, casa, etc."
             value={customer.complements}
             onChange={handleFieldChange}
-            error={inputErrors?.complements}
+            error={Boolean(inputErrors?.complements)}
             helperText={inputErrors?.complements} 
           />
 
@@ -270,7 +286,7 @@ export default function CustomerForm() {
             fullWidth
             value={customer.district}
             onChange={handleFieldChange} 
-            error={inputErrors?.district}
+            error={Boolean(inputErrors?.district)}
             helperText={inputErrors?.district}  
           />
 
@@ -282,7 +298,7 @@ export default function CustomerForm() {
             fullWidth
             value={customer.municipality}
             onChange={handleFieldChange} 
-            error={inputErrors?.municipality}
+            error={Boolean(inputErrors?.municipality)}
             helperText={inputErrors?.municipality}  
           />
 
@@ -295,7 +311,7 @@ export default function CustomerForm() {
             value={customer.state}
             onChange={handleFieldChange}
             select
-            error={inputErrors?.state}
+            error={Boolean(inputErrors?.state)}
             helperText={inputErrors?.state} 
           >
             {
@@ -322,7 +338,7 @@ export default function CustomerForm() {
                   variant="filled"
                   required
                   fullWidth 
-                  error={inputErrors?.phone}
+                  error={Boolean(inputErrors?.phone)}
                   helperText={inputErrors?.phone}                   
                 />
             }
@@ -337,7 +353,7 @@ export default function CustomerForm() {
             fullWidth
             value={customer.email}
             onChange={handleFieldChange}  
-            error={inputErrors?.email}
+            error={Boolean(inputErrors?.email)}
             helperText={inputErrors?.email} 
           />
 
