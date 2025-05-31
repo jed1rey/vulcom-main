@@ -1,35 +1,38 @@
 import prisma from '../database/client.js'
+import { carSchema } from '../validations/carValidation.js'
 
 const controller = {}     // Objeto vazio
 
 controller.create = async function(req, res) {
   try {
+    //req.body.created_user_id = req.authUser.id
+    //req.body.updated_user_id = req.authUser.id
 
-    // Preenche qual usuário criou o carro com o id do usuário autenticado
-    req.body.created_user_id = req.authUser.id
+    // Validação com Zod
+    const parsed = carSchema.safeParse(req.body)
 
-    // Preenche qual usuário modificou por último o carro com o id
-    // do usuário autenticado
-    req.body.updated_user_id = req.authUser.id
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: 'Dados inválidos',
+        details: parsed.error.errors
+      })
+    }
 
-    await prisma.car.create({ data: req.body })
+    await prisma.car.create({ data: parsed.data })
 
     // HTTP 201: Created
     res.status(201).end()
   }
   catch(error) {
     console.error(error)
-
-    // HTTP 500: Internal Server Error
     res.status(500).end()
   }
 }
 
 controller.retrieveAll = async function(req, res) {
   try {
-
     const includedRels = req.query.include?.split(',') ?? []
-    
+
     const result = await prisma.car.findMany({
       orderBy: [
         { brand: 'asc' },
@@ -43,20 +46,16 @@ controller.retrieveAll = async function(req, res) {
       }
     })
 
-    // HTTP 200: OK (implícito)
     res.send(result)
   }
   catch(error) {
     console.error(error)
-
-    // HTTP 500: Internal Server Error
     res.status(500).end()
   }
 }
 
 controller.retrieveOne = async function(req, res) {
   try {
-
     const includedRels = req.query.include?.split(',') ?? []
 
     const result = await prisma.car.findUnique({
@@ -68,39 +67,43 @@ controller.retrieveOne = async function(req, res) {
       }
     })
 
-    // Encontrou ~> retorna HTTP 200: OK (implícito)
     if(result) res.send(result)
-    // Não encontrou ~> retorna HTTP 404: Not Found
     else res.status(404).end()
   }
   catch(error) {
     console.error(error)
-
-    // HTTP 500: Internal Server Error
     res.status(500).end()
   }
 }
 
 controller.update = async function(req, res) {
   try {
+    const parsed = carSchema.safeParse(req.body)
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: 'Dados inválidos',
+        details: parsed.error.errors
+      })
+    }
+
+    // Atualiza o campo de modificação
+    //parsed.data.updated_user_id = req.authUser.id
 
     const result = await prisma.car.update({
       where: { id: Number(req.params.id) },
-      data: req.body
+      data: parsed.data
     })
 
-    // Encontrou e atualizou ~> HTTP 204: No Content
     if(result) res.status(204).end()
-    // Não encontrou (e não atualizou) ~> HTTP 404: Not Found
     else res.status(404).end()
   }
   catch(error) {
     console.error(error)
-
-    // HTTP 500: Internal Server Error
     res.status(500).end()
   }
 }
+
 
 controller.delete = async function(req, res) {
   try {
@@ -108,19 +111,14 @@ controller.delete = async function(req, res) {
       where: { id: Number(req.params.id) }
     })
 
-    // Encontrou e excluiu ~> HTTP 204: No Content
     res.status(204).end()
   }
   catch(error) {
     if(error?.code === 'P2025') {
-      // Não encontrou e não excluiu ~> HTTP 404: Not Found
       res.status(404).end()
     }
     else {
-      // Outros tipos de erro
       console.error(error)
-
-      // HTTP 500: Internal Server Error
       res.status(500).end()
     }
   }

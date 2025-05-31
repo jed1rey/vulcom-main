@@ -21,7 +21,7 @@
     "express-rate-limit": "^7.5.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
-    "zod": "^3.25.28"
+    "zod": "^3.25.42"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.6.0",
