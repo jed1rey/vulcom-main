@@ -1,32 +1,32 @@
 import prisma from '../database/client.js'
-import Car from '../models/Car.js'  // Corrigido para usar como schema Zod
+import Car from '../models/Car.js'
 import { ZodError } from 'zod'
 
-const controller = {}
+const controller = {}     // Objeto vazio
 
-// CREATE
 controller.create = async function(req, res) {
   try {
-    const parsed = Car.safeParse(req.body)
+    req.body.created_user_id = req.authUser.id
+    req.body.updated_user_id = req.authUser.id
 
-    if (!parsed.success) {
-      return res.status(422).json({
-        error: 'Dados inválidos',
-        details: parsed.error.errors
-      })
-    }
+    // Validação Zod
+    const validatedData = CarSchema.parse(req.body)
 
-    await prisma.car.create({ data: parsed.data })
+    await prisma.car.create({ data: validatedData })
 
     res.status(201).end()
   }
   catch(error) {
     console.error(error)
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ validationErrors: error.errors })
+    }
+
     res.status(500).end()
   }
 }
 
-// RETRIEVE ALL
 controller.retrieveAll = async function(req, res) {
   try {
     const includedRels = req.query.include?.split(',') ?? []
@@ -52,16 +52,12 @@ controller.retrieveAll = async function(req, res) {
   }
 }
 
-// RETRIEVE ONE
 controller.retrieveOne = async function(req, res) {
   try {
-    const id = Number(req.params.id)
-    if (isNaN(id)) return res.status(400).send({ error: 'ID inválido.' })
-
     const includedRels = req.query.include?.split(',') ?? []
 
     const result = await prisma.car.findUnique({
-      where: { id },
+      where: { id: Number(req.params.id) },
       include: {
         customer: includedRels.includes('customer'),
         created_user: includedRels.includes('created_user'),
@@ -78,47 +74,36 @@ controller.retrieveOne = async function(req, res) {
   }
 }
 
-// UPDATE
 controller.update = async function(req, res) {
   try {
-    const id = Number(req.params.id)
-    if (isNaN(id)) return res.status(400).send({ error: 'ID inválido.' })
+    req.body.updated_user_id = req.authUser.id
 
-    const parsed = Car.safeParse(req.body)
+    // Validação Zod
+    const validatedData = CarSchema.parse(req.body)
 
-    if (!parsed.success) {
-      return res.status(422).json({
-        error: 'Dados inválidos',
-        details: parsed.error.errors
-      })
-    }
-
-    await prisma.car.update({
-      where: { id },
-      data: parsed.data
+    const result = await prisma.car.update({
+      where: { id: Number(req.params.id) },
+      data: validatedData
     })
 
-    res.status(204).end()
+    if(result) res.status(204).end()
+    else res.status(404).end()
   }
   catch(error) {
-    if(error?.code === 'P2025') {
-      res.status(404).end()
+    console.error(error)
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ validationErrors: error.errors })
     }
-    else {
-      console.error(error)
-      res.status(500).end()
-    }
+
+    res.status(500).end()
   }
 }
 
-// DELETE
 controller.delete = async function(req, res) {
   try {
-    const id = Number(req.params.id)
-    if (isNaN(id)) return res.status(400).send({ error: 'ID inválido.' })
-
     await prisma.car.delete({
-      where: { id }
+      where: { id: Number(req.params.id) }
     })
 
     res.status(204).end()
